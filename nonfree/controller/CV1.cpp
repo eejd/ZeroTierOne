@@ -1130,22 +1130,22 @@ void CV1::heartbeat()
 			std::string build = std::to_string(ZEROTIER_ONE_VERSION_BUILD);
 			std::string now = std::to_string(ts);
 			std::string host_port = std::to_string(_listenPort);
-			std::string use_redis = (_rc != NULL) ? "true" : "false";
+			std::string notification_transport = (_rc != NULL) ? "redis" : "postgres";
 			std::string redis_mem_status = (_redisMemberStatus) ? "true" : "false";
 
 			try {
 				pqxx::work w { *c->c };
 
 				pqxx::result res = w.exec0(
-					"INSERT INTO ztc_controller (id, cluster_host, last_alive, public_identity, v_major, v_minor, v_rev, v_build, host_port, use_redis, redis_member_status) "
+					"INSERT INTO ztc_controller (id, cluster_host, last_alive, public_identity, v_major, v_minor, v_rev, v_build, host_port, notification_transport, redis_member_status) "
 					"VALUES ("
 					+ w.quote(controllerId) + ", " + w.quote(hostname) + ", TO_TIMESTAMP(" + now + "::double precision/1000), " + w.quote(publicIdentity) + ", " + major + ", " + minor + ", " + rev + ", " + build + ", " + host_port + ", "
-					+ use_redis + ", " + redis_mem_status
+					+ w.quote(notification_transport) + ", " + redis_mem_status
 					+ ") "
 					  "ON CONFLICT (id) DO UPDATE SET cluster_host = EXCLUDED.cluster_host, last_alive = EXCLUDED.last_alive, "
 					  "public_identity = EXCLUDED.public_identity, v_major = EXCLUDED.v_major, v_minor = EXCLUDED.v_minor, "
 					  "v_rev = EXCLUDED.v_rev, v_build = EXCLUDED.v_rev, host_port = EXCLUDED.host_port, "
-					  "use_redis = EXCLUDED.use_redis, redis_member_status = EXCLUDED.redis_member_status");
+					  "notification_transport = EXCLUDED.notification_transport, redis_member_status = EXCLUDED.redis_member_status");
 				w.commit();
 			}
 			catch (std::exception& e) {
